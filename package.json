@@ -1,0 +1,13 @@
+{
+  "name": "class-menupan2",
+  "version": "0.1.0",
+  "private": true,
+  "description": "엑셀 시트를 연동한 카페 메뉴판 - SSE, 알림, 스킨 테마 변경",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}
