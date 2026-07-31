@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>카페 메뉴판</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div id="board" class="board">
+  <div class="board__bg"></div>
+  <div class="board__content">
+    <div class="board__eyebrow" id="eyebrow"></div>
+    <div class="board__store" id="store"></div>
+    <div class="board__rule"></div>
+    <div class="board__sheet-row">
+      <div class="board__tabs" id="sheet-tabs"></div>
+      <span class="board__sheet-meta" id="sheet-meta"></span>
+    </div>
+    <div class="board__list" id="item-list"></div>
+  </div>
+  <div class="board__frame"></div>
+</div>
+<script type="module" src="/client.js"></script>
+</body>
+</html>

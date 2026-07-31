@@ -108,3 +108,25 @@
 - [x] Red — `test/menuUpdateEmitter.test.mjs` 작성, `lib/menuUpdateEmitter.mjs` 부재로 `ERR_MODULE_NOT_FOUND` 확인됨
 - [x] Green — `createMenuUpdateEmitter(delayMs)` 구현(`debounce` 재사용 + `EventEmitter`), `npm test` 14 pass 확인됨
 - [x] Refactor — Extract Constant: `'menu-updated'` 매직 스트링을 `MENU_UPDATED_EVENT`로 추출해 lib/test 양쪽에서 공유, `npm test` 14 pass 유지 확인됨
+
+## 8. 페이지 탭 내비게이션 (클릭 전환)
+
+> 발견 경위: 프론트가 여러 시트(커피/디저트/음료) 중 첫 페이지에 고정되는 버그 리포트. 원인은 `client.js`에 페이지 전환 UI 자체가 없었고, `자동전환초=0`이라 자동전환도 안 됨. 페이지 선택 로직을 DOM과 분리된 순수 함수로 뽑아 TDD 대상으로 삼는다.
+
+### 8.1 shouldListAllPageTitlesForTabs
+`pages` 배열에서 탭에 표시할 시트명 목록을 순서대로 뽑는다.
+- [x] Red — `test/pageNav.test.mjs` 작성, `lib/pageNav.mjs` 부재로 `ERR_MODULE_NOT_FOUND` 확인됨
+- [x] Green — `listPageTitles(pages)` 구현, `npm test` 15 pass 확인됨
+- [x] Refactor — 코드 품질 기준 점검, 정리할 것 없음 (변경 없음)
+
+### 8.2 shouldFindPageIndexByTitle
+클릭한 탭의 시트명으로 해당 페이지 인덱스를 찾는다.
+- [x] Red — `test/pageNav.test.mjs`에 테스트 추가, `findPageIndexByTitle` 미구현으로 `SyntaxError: does not provide an export named 'findPageIndexByTitle'` 확인됨
+- [x] Green — `findPageIndexByTitle(pages, title)` 구현(`Array.findIndex`), `npm test` 16 pass 확인됨
+- [x] Refactor — 코드 품질 기준 점검, 정리할 것 없음 (변경 없음)
+
+### 8.3 shouldFallBackToFirstPageIndexWhenTitleNotFound
+존재하지 않는 시트명이 주어지면 첫 페이지(인덱스 0)로 폴백한다(방어적 동작).
+- [x] Red — `test/pageNav.test.mjs`에 없는 시트명 케이스 추가, `findIndex`가 `-1` 반환해 `AssertionError`(`0` 기대) 확인됨
+- [x] Green — `index === -1 ? 0 : index` 폴백 추가, `npm test` 17 pass 확인됨
+- [x] Refactor — 코드 품질 기준 점검, 정리할 것 없음 (변경 없음)

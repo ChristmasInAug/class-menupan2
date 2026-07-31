@@ -1,0 +1,179 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #000;
+}
+
+.board {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Pretendard', sans-serif;
+  color: var(--text);
+}
+
+.board__bg {
+  position: absolute;
+  inset: 0;
+  background-image: var(--bg-url);
+  background-size: cover;
+  background-position: center;
+}
+
+.board__frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--frame-url);
+  background-size: cover;
+  background-position: center;
+}
+
+.board__content {
+  position: absolute;
+  inset: 0;
+  padding: 8.5vmin;
+  display: flex;
+  flex-direction: column;
+}
+
+.board__eyebrow {
+  font-size: 1.75vmin;
+  letter-spacing: 0.7vmin;
+  color: var(--accent);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.board__store {
+  font-family: 'Nanum Myeongjo', serif;
+  font-size: 5.8vmin;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+  margin-top: 1.4vmin;
+}
+
+.board__rule {
+  height: 2px;
+  width: 11vmin;
+  background: var(--accent);
+  opacity: 0.85;
+  margin: 3vmin 0 2.2vmin;
+}
+
+.board__sheet-row {
+  display: flex;
+  align-items: baseline;
+  gap: 2vmin;
+}
+
+.board__tabs {
+  display: flex;
+  align-items: baseline;
+  gap: 2.2vmin;
+}
+
+.board__tab {
+  font-family: 'Nanum Myeongjo', serif;
+  font-size: 3vmin;
+  font-weight: 700;
+  color: var(--sub);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0 0 0.4vmin;
+  cursor: pointer;
+}
+
+.board__tab--active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.board__sheet-meta {
+  font-size: 1.5vmin;
+  letter-spacing: 0.5vmin;
+  color: var(--sub);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.board__list {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 7.5vmin;
+  row-gap: 3.2vmin;
+  margin-top: 5vmin;
+  overflow-y: auto;
+}
+
+.board[data-device='tablet-land'] .board__list {
+  grid-template-columns: 1fr 1fr;
+}
+
+.board__item {
+  display: flex;
+  flex-direction: column;
+}
+
+.board__item--sold-out {
+  opacity: 0.5;
+}
+
+.board__item-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1.2vmin;
+}
+
+.board__item-name {
+  font-size: 3vmin;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.board__item--sold-out .board__item-name {
+  text-decoration: line-through;
+  color: var(--sub);
+}
+
+.board__item-badge {
+  font-size: 1.5vmin;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 0.3vmin 1.2vmin;
+  white-space: nowrap;
+}
+
+.board__item-leader {
+  flex: 1;
+  align-self: center;
+  border-bottom: 1px dotted var(--sub);
+  margin: 0 0.6vmin;
+}
+
+.board__item-price {
+  font-size: 3vmin;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.board__item--sold-out .board__item-price {
+  color: var(--sub);
+}
+
+.board__item-desc {
+  font-size: 1.85vmin;
+  color: var(--sub);
+  margin-top: 0.7vmin;
+  line-height: 1.3;
+}
