@@ -263,3 +263,7 @@ Failed to load resource: the server responded with a status of 404 (Not Found)  
 어드민은 /admin 주소로 접근해서 amdin/1234 로 로그인 한 뒤 @design/project/메뉴판 템플릿 시스템.dc.html 화면에서 보는 방식과 동일하게 테마와 디바이스, 엑셀 시트의 설정을 조정 할 수 있도록 화면을 제공하고 설정 저장시 excel에 반영해서 프론트 메뉴가 SSE로 적용되도록 변경해.
 테스트 케이스 먼저 만들고 통과시 기능을 완성하는 프로세스로 개발 진행해.
 
+### 22. 2026-08-01
+
+admin까지 작업된 브랜치는 main 브랜치로 PR을 보내
+
