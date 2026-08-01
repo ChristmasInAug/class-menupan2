@@ -130,3 +130,41 @@
 - [x] Red — `test/pageNav.test.mjs`에 없는 시트명 케이스 추가, `findIndex`가 `-1` 반환해 `AssertionError`(`0` 기대) 확인됨
 - [x] Green — `index === -1 ? 0 : index` 폴백 추가, `npm test` 17 pass 확인됨
 - [x] Refactor — 코드 품질 기준 점검, 정리할 것 없음 (변경 없음)
+
+## 9. 관리자 설정 화면 (`/admin`)
+
+> 계기: 점주가 Excel을 열지 않고도 테마·디바이스·매장명 등을 웹에서 바꾸고 싶다는 요구. `design/project/메뉴판 템플릿 시스템.dc.html`과 같은 버튼 방식(테마 8종 × 디바이스 4종)으로 조작하고, 저장 시 `_설정` 시트에 반영 → 기존 chokidar/SSE 파이프라인을 그대로 태워 프론트(`/`)에 자동 반영. PRD 5절의 "사용자 인증/권한 관리 비범위"는 이 기능으로 범위 확장됨(PRD.md 갱신).
+
+### 9.1 shouldAcceptCorrectAdminCredentials / shouldRejectIncorrectAdminCredentials
+admin/1234 조합만 인증 통과, 그 외는 거부한다.
+- [x] Red — `test/auth.test.mjs` 작성, `lib/auth.mjs` 부재로 `ERR_MODULE_NOT_FOUND` 확인됨
+- [x] Green — `lib/auth.mjs`에 `verifyCredentials(username, password)` 구현(상수 비교), `npm test` 19 pass 확인됨
+- [x] Refactor — 코드 품질 기준 점검, 정리할 것 없음 (변경 없음)
+
+### 9.2 shouldSerializeSettingsObjectToSheetRows
+설정 객체를 `_설정` 시트 행 배열로 직렬화한다. `parseSettingsSheet`와의 라운드트립으로 검증.
+- [x] Red — `test/excelParser.test.mjs`에 라운드트립 테스트 추가, `buildSettingsSheetRows` 미구현으로 `SyntaxError` 확인됨
+- [x] Green — `lib/excelParser.mjs`에 `buildSettingsSheetRows(settings)` 구현(`[['항목','값'], ...Object.entries(settings)]`), `npm test` 20 pass 확인됨
+- [x] Refactor — `SETTINGS_SHEET_NAME` 상수를 export로 전환해 `settingsWriter.mjs`에서 재사용 가능하게 함, `npm test` 20 pass 유지 확인됨
+
+### 9.3 shouldRejectUnknownThemeKeyOnSettingsUpdate / shouldRejectUnknownDeviceKeyOnSettingsUpdate
+정의되지 않은 테마/디바이스 키는 저장을 거부한다.
+- [x] Red — `test/settingsValidation.test.mjs` 작성, `lib/settingsValidation.mjs` 부재로 `ERR_MODULE_NOT_FOUND` 확인됨
+- [x] Green — `lib/catalog.mjs`(테마 8종 · 디바이스 4종 단일 출처, `/lib`로 정적 서빙되어 관리자 프론트에서도 동일 목록 재사용)와 `lib/settingsValidation.mjs`의 `validateSettingsUpdate(settings)` 구현, `npm test` 22 pass 확인됨
+- [x] Refactor — 코드 품질 기준 점검, 정리할 것 없음 (변경 없음)
+
+### 9.4 shouldPersistSettingsUpdateAndReflectOnNextRead
+설정 저장 후 같은 파일을 다시 읽으면 갱신된 값이 반영되고, 다른 시트는 그대로 남는다(임시 xlsx 픽스처로 검증).
+- [x] Red — `test/settingsWriter.test.mjs` 작성, `lib/settingsWriter.mjs` 부재로 `ERR_MODULE_NOT_FOUND` 확인됨
+- [x] Green — `lib/settingsWriter.mjs`에 `writeSettingsToFile(filePath, settings)` 구현(검증 → `_설정` 시트 교체 → `XLSX.writeFile`), `npm test` 23 pass 확인됨
+- [x] Refactor — 픽스처 워크북 생성 코드를 `testHelpers/xlsxFixture.mjs`로 추출해 `settingsWriter.test.mjs`/`createApp.test.mjs`가 공유하도록 정리. **주의**: 최초 `test/helpers/`에 두었더니 Node 테스트 러너가 `test/` 하위 모든 `.mjs`를 테스트 파일로 오인식해 유령 테스트가 잡힘 — `test/` 밖(`testHelpers/`)으로 이동해 해결. `npm test` 23 pass 유지 확인됨
+
+### 9.5 shouldRequireAuthToAccessAdminApi
+인증 없이 관리자 API 접근 시 401, 로그인 후 세션 쿠키로 접근 시 200.
+- [x] Red — `test/createApp.test.mjs` 작성. 이 항목은 `server.mjs`에서 `express` 앱 생성 로직을 `lib/createApp.mjs`로 뽑아내는 구조적 변경(Tidy First)이 선행되어야 실제 앱 인스턴스를 임시 포트 + 임시 xlsx 픽스처로 테스트할 수 있었음(기존 `server.mjs`는 실행 시 즉시 `app.listen`이라 격리 테스트 불가) — 추출 직후 `npm test`로 기존 23개 회귀 없음 확인 후 이 테스트 작성
+- [x] Green — `lib/createApp.mjs`에 `createApp(menuFilePath)` 구현: `lib/session.mjs`(메모리 토큰 세션) + 쿠키 기반 `requireAdminAuth` 미들웨어 + `/admin/api/login`·`/admin/api/logout`·`/admin/api/settings`(GET/POST) 라우트. `server.mjs`는 `createApp` 호출 + `chokidar.watch` 배선만 남는 얇은 부트스트랩으로 축소. `npm test` 24 pass 확인됨
+- [x] Refactor — 코드 품질 기준 점검, 정리할 것 없음 (변경 없음)
+
+### 9.6 관리자 프론트엔드 (자동화 테스트 대상 아님 — 헤드리스 브라우저로 수동 검증)
+`public/admin/`에 로그인 폼 + 설정 패널(테마/디바이스 버튼, 매장명/영문태그/자동전환초 입력) 구현. 테마·디바이스 버튼 목록은 `/lib/catalog.mjs`를 그대로 import해 서버·프론트가 단일 출처를 공유한다(다른 pure 함수처럼 단위 테스트 가능한 로직은 이미 `lib/`에서 검증됨; DOM 배선 자체는 `public/client.js`와 동일하게 얇게 유지).
+- Chrome DevTools Protocol로 실제 로그인 → 설정 패널 렌더 → 버튼 클릭 → 저장까지 구동해 확인: 401 → 로그인 폼, 로그인 후 현재 `_설정` 값이 정확히 버튼 활성 상태/입력값에 반영됨, 저장 시 200 + 실데이터 파일에 정상 반영(회귀 없음, 기존 값과 동일한 값으로 저장해 실데이터 안전하게 검증).

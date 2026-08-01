@@ -4,6 +4,7 @@ import {
   parseSheetRows,
   parseWorkbookToPages,
   parseSettingsSheet,
+  buildSettingsSheetRows,
   isSoldOut,
   parsePrice,
   buildMenuResponse,
@@ -133,6 +134,21 @@ test('shouldParseNumericPriceAsNumber', () => {
 
 test('shouldRejectNonNumericPriceInput', () => {
   assert.throws(() => parsePrice('₩4,500'));
+});
+
+test('shouldSerializeSettingsObjectToSheetRows', () => {
+  const settings = {
+    매장명: '빌런 커피',
+    테마: 'deep-green',
+    디바이스: 'tablet-port',
+    영문태그: 'SPECIALTY COFFEE',
+    자동전환초: 0,
+  };
+
+  const rows = buildSettingsSheetRows(settings);
+
+  assert.deepEqual(rows[0], ['항목', '값']);
+  assert.deepEqual(parseSettingsSheet(rows), settings);
 });
 
 test('shouldReturnPagesArrayWithStoreNameThemeAutoRotate', () => {

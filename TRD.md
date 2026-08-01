@@ -25,23 +25,37 @@ data/menu.xlsx ──(chokidar 파일 감시, 300ms 디바운스)──▶ serve
 ```text
 class-menupan2/
 ├── package.json          # 의존성: express, chokidar, xlsx(SheetJS)
-├── server.mjs             # 파일 감시 + Excel 파싱 + SSE 푸시
+├── server.mjs             # 부트스트랩: createApp() 호출 + chokidar 배선 + listen
 ├── data/
 │   └── menu.xlsx          # 실 데이터 (커피/디저트/음료 + _설정)
 ├── docs/
 │   └── menu-project-requirement.md
 ├── design/                # Claude Design 핸드오프 번들 (UI 프로토타입, 참고용)
 │   └── project/메뉴판 템플릿 시스템.dc.html
-└── public/
-    ├── index.html          # 메뉴판 화면
-    ├── client.js           # SSE 수신 + 렌더링
-    └── templates/
-        ├── board-grid.css   # 공통 레이아웃(테마 변수 기반)
-        ├── cafe-dark.css    # 테마 1: 어두운 카페(앰버)
-        └── bistro-light.css # 테마 2: 밝은 비스트로(브릭레드)
+├── lib/                   # 순수 함수 + express 앱 팩토리(테스트 대상)
+│   ├── createApp.mjs       # express 앱 조립(라우트 전체), 파일 경로를 인자로 받아 테스트 격리 가능
+│   ├── excelParser.mjs     # 시트→페이지, _설정 파싱/직렬화
+│   ├── settingsWriter.mjs  # 검증된 설정을 _설정 시트로 저장
+│   ├── settingsValidation.mjs
+│   ├── catalog.mjs         # 테마/디바이스 목록 단일 출처(서버·관리자 프론트 공유)
+│   ├── auth.mjs            # 관리자 자격증명 검증
+│   ├── session.mjs         # 메모리 세션 토큰
+│   ├── menuUpdateEmitter.mjs
+│   ├── debounce.mjs
+│   └── pageNav.mjs
+├── public/
+│   ├── index.html          # 메뉴판 화면(정면, 전체화면 보드만 출력)
+│   ├── client.js
+│   ├── style.css
+│   └── admin/               # 관리자 설정 화면
+│       ├── index.html
+│       ├── admin.js
+│       └── admin.css
+├── test/                  # node --test 대상(파일명 규칙 준수 필요 — 9.4 항목 주석 참고)
+└── testHelpers/
+    └── xlsxFixture.mjs     # 테스트용 임시 xlsx 픽스처 생성
 ```
 
-> `server.mjs`, `package.json`, `public/*`는 아직 미구현. 본 문서는 구현 대상 스펙이다.
 
 ## 3. 기술 스택
 
@@ -71,8 +85,23 @@ class-menupan2/
 | `/` | GET | `public/index.html` 정적 서빙 |
 | `/api/menu` | GET | 현재 파싱된 메뉴 JSON 반환 (초기 로드용) |
 | `/api/events` (예시) | GET (SSE) | `menu-updated` 이벤트 스트림. Excel 저장 시마다 1회 발행 |
+| `/admin` | GET | `public/admin/index.html` 정적 서빙(로그인 폼/설정 패널, 인증 게이팅은 프론트 JS가 API 응답 코드로 판단) |
+| `/admin/api/login` | POST | `{username,password}` → 성공 시 세션 쿠키(`admin_session`) 발급 |
+| `/admin/api/logout` | POST | 세션 폐기 |
+| `/admin/api/settings` | GET | (인증 필요) 현재 `_설정` 값 반환 |
+| `/admin/api/settings` | POST | (인증 필요) `_설정` 값 갱신 → `data/menu.xlsx` 저장 → 기존 chokidar/SSE 파이프라인을 그대로 태워 `/`에 반영 |
 
 `menu-updated` 이벤트 payload는 `/api/menu`가 반환하는 것과 동일한 구조의 JSON이어야 한다(클라이언트가 별도 재요청 없이 바로 렌더링 가능하도록).
+
+### 4.1 관리자 인증
+
+- 고정 계정 1개(`admin`/`1234`, `lib/auth.mjs`). 다중 사용자·역할 기반 권한이 아니라 "Excel 대신 웹으로 설정 조정"을 잠그는 최소 장치다.
+- 세션은 서버 메모리에 보관되는 랜덤 토큰(`lib/session.mjs`) + `HttpOnly` 쿠키. 서버 재시작 시 모든 세션이 사라진다(재로그인 필요) — 별도 저장소를 두지 않는다.
+- `/admin/api/settings`(GET/POST)는 `requireAdminAuth` 미들웨어로 보호된다. 나머지(`/`, `/api/menu`, `/api/events`)는 기존과 동일하게 공개.
+
+### 4.2 테마 · 디바이스 카탈로그 단일 출처
+
+`lib/catalog.mjs`가 테마 8종 · 디바이스 4종(키·라벨·해상도)의 유일한 출처다. `/lib`가 정적 서빙되므로(`server.mjs`) 서버(`lib/settingsValidation.mjs`의 검증)와 관리자 프론트(`public/admin/admin.js`)가 같은 모듈을 그대로 import해 목록이 어긋나지 않는다. `design/project/메뉴판 템플릿 시스템.dc.html` 목업의 버튼 목록과 값이 일치해야 한다.
 
 ## 5. Excel → JSON 파싱 규칙
 
