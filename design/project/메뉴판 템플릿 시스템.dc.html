@@ -18,13 +18,13 @@
   </style>
 </helmet>
 
-<div style="min-height:100vh;background:#e3e1da;font-family:'Pretendard',sans-serif;padding:40px 40px 64px;">
+<div id="dc-page" style="{{ pageStyle }}">
 
   <!-- Header -->
   <div style="max-width:1080px;margin:0 auto 28px;">
-    <div style="font-size:12px;font-weight:700;letter-spacing:3px;color:#9a8f7e;text-transform:uppercase;">Excel-Driven Menu Board · Template System</div>
-    <h1 style="font-family:'Nanum Myeongjo',serif;font-size:38px;font-weight:800;color:#26221d;margin:8px 0 6px;letter-spacing:-0.5px;">카페 메뉴판 템플릿 시스템</h1>
-    <p style="font-size:15px;color:#6f675b;margin:0;line-height:1.6;max-width:640px;">같은 Excel 데이터를 두고 <strong style="color:#3c372f;">배경·테두리 PNG</strong>만 교체합니다. 테마 4종 × 디바이스 4종에 맞춰 최적화된 반응형 화면을 미리 봅니다.</p>
+    <div style="font-size:11px;font-weight:700;letter-spacing:2.5px;color:#9a8f7e;text-transform:uppercase;">Excel-Driven Menu Board · Template System</div>
+    <h1 style="{{ heroTitleStyle }}">카페 메뉴판 템플릿 시스템</h1>
+    <p style="{{ heroDescStyle }}">같은 Excel 데이터를 두고 <strong style="color:#3c372f;">배경·테두리 PNG</strong>만 교체합니다. 테마 4종 × 디바이스 4종에 맞춰 최적화된 반응형 화면을 미리 봅니다.</p>
   </div>
 
   <!-- Controls -->
@@ -54,7 +54,7 @@
   </div>
 
   <!-- Stage -->
-  <div style="max-width:1080px;margin:0 auto;background:#d6d4cc;border-radius:14px;padding:36px 24px;display:flex;align-items:center;justify-content:center;min-height:720px;box-shadow:inset 0 1px 3px rgba(0,0,0,0.06);">
+  <div style="{{ stageOuterStyle }}">
     <div style="{{ clipStyle }}">
       <div style="{{ innerStyle }}">
         <div style="{{ bgLayerStyle }}"></div>
@@ -110,7 +110,26 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1160,&quot;height&quot;:900}}">
 class Component extends DCLogic {
-  state = { theme: 'light-olive', device: 'signage' };
+  state = { theme: 'light-olive', device: 'signage', containerW: window.innerWidth, vh: window.innerHeight };
+
+  componentDidMount() {
+    this._onResize = () => this.setState({ vh: window.innerHeight });
+    window.addEventListener('resize', this._onResize);
+
+    const el = document.getElementById('dc-page');
+    if (el && typeof ResizeObserver !== 'undefined') {
+      this._ro = new ResizeObserver(entries => {
+        const w = entries[0].contentRect.width;
+        if (w > 0) this.setState({ containerW: w });
+      });
+      this._ro.observe(el);
+    }
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._onResize);
+    if (this._ro) this._ro.disconnect();
+  }
 
   THEMES = {
     'light-olive': { label: 'Light Olive', ko: '라이트 올리브', text: '#33381f', sub: '#6e7350', accent: '#6f7637' },
@@ -152,7 +171,52 @@ class Component extends DCLogic {
     const d = this.DEVICES[this.state.device];
     const u = Math.min(d.w, d.h);
 
-    const stageW = 1000, stageH = 660;
+    // containerW = measured content-box width of #dc-page (ResizeObserver) —
+    // reflects the real rendered width even inside embedding contexts where
+    // window.innerWidth doesn't match the actual visible canvas.
+    const containerW = this.state.containerW || window.innerWidth;
+    const vh = this.state.vh || window.innerHeight;
+    const isMobile = containerW <= 560;
+    const isTablet = !isMobile && containerW <= 900;
+
+    const outerPadX = isMobile ? 16 : isTablet ? 24 : 40;
+    const outerPadTop = isMobile ? 20 : isTablet ? 28 : 40;
+    const outerPadBottom = isMobile ? 32 : isTablet ? 44 : 64;
+    const stagePadX = isMobile ? 12 : isTablet ? 18 : 24;
+    const stagePadY = isMobile ? 20 : isTablet ? 28 : 36;
+    const stageRadius = isMobile ? 10 : 14;
+
+    // #dc-page's own padding is already excluded from containerW (ResizeObserver
+    // reports content-box), so only the stage's own max-width cap and padding apply.
+    const stageWCap = 1000;
+    const stageHCap = isMobile ? 460 : isTablet ? 560 : 660;
+    const contentAreaW = Math.min(containerW, 1080);
+    const stageW = Math.max(220, Math.min(stageWCap, contentAreaW - stagePadX * 2 - 2));
+    const stageH = Math.max(240, Math.min(stageHCap, vh * 0.62));
+
+    const pageStyle = {
+      minHeight: '100vh', background: '#e3e1da', fontFamily: "'Pretendard',sans-serif",
+      padding: `${px(outerPadTop)} ${px(outerPadX)} ${px(outerPadBottom)}`,
+      boxSizing: 'border-box', overflowX: 'hidden', maxWidth: '100vw',
+    };
+    const heroTitleStyle = {
+      fontFamily: "'Nanum Myeongjo',serif", fontWeight: 800, color: '#26221d',
+      margin: '8px 0 6px', letterSpacing: '-0.5px',
+      fontSize: isMobile ? '26px' : isTablet ? '32px' : '38px',
+    };
+    const heroDescStyle = {
+      fontSize: isMobile ? '13.5px' : '15px', color: '#6f675b', margin: 0,
+      lineHeight: 1.6, maxWidth: '640px',
+    };
+    const stageOuterStyle = {
+      maxWidth: '1080px', margin: '0 auto', background: '#d6d4cc',
+      borderRadius: px(stageRadius),
+      padding: `${px(stagePadY)} ${px(stagePadX)}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      minHeight: px(stageH + stagePadY * 2),
+      boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)',
+    };
+
     const scale = Math.min(stageW / d.w, stageH / d.h);
     const boxW = d.w * scale, boxH = d.h * scale;
     const pad = u * 0.085;
@@ -166,6 +230,7 @@ class Component extends DCLogic {
 
     const clipStyle = {
       position: 'relative', width: px(boxW), height: px(boxH),
+      maxWidth: '100%', flex: 'none',
       borderRadius: '2px', overflow: 'hidden',
       boxShadow: '0 24px 64px rgba(0,0,0,0.30)',
     };
@@ -255,7 +320,7 @@ class Component extends DCLogic {
         key: k, label: v.label, ko: v.ko, onClick: () => this.setTheme(k),
         style: {
           display: 'flex', flexDirection: 'column', gap: '3px', alignItems: 'flex-start',
-          padding: '9px 13px', borderRadius: '9px', cursor: 'pointer', minWidth: '128px',
+          padding: '9px 13px', borderRadius: '9px', cursor: 'pointer', minWidth: isMobile ? '100px' : '128px',
           border: active ? `1.5px solid ${v.accent}` : '1.5px solid #d2d0c8',
           background: active ? '#fbfaf7' : '#edece7',
           boxShadow: active ? `0 2px 10px ${this.hexA(v.accent, 0.22)}` : 'none',
@@ -295,6 +360,7 @@ class Component extends DCLogic {
         backgroundImage: `url("${frameUrl}")`, backgroundSize: 'cover', backgroundPosition: 'center',
       },
       dimLabel: `${d.w} × ${d.h}px`,
+      pageStyle, heroTitleStyle, heroDescStyle, stageOuterStyle,
       clipStyle, innerStyle, contentStyle,
       eyebrowStyle, storeStyle, ruleStyle, sheetRowStyle, sheetStyle, sheetMetaStyle,
       showPhoto, photoStyle, photoLabelStyle, listStyle, items,

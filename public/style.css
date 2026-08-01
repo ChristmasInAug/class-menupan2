@@ -5,16 +5,30 @@
 body {
   margin: 0;
   background: #000;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* 디바이스별 목표 해상도(CLAUDE.md #해상도) 비율. board는 뷰포트 안에서
+   이 비율을 유지한 채 contain 방식으로 맞춤 — 100vw/100vh로 늘리면
+   배경·테두리 PNG(디바이스 전용 비율)가 잘림. */
 .board {
+  --ar-w: 1080;
+  --ar-h: 1920; /* 사이니지 세로 1080x1920 (기본값) */
   position: relative;
-  width: 100vw;
-  height: 100vh;
   overflow: hidden;
+  container-type: size;
+  aspect-ratio: var(--ar-w) / var(--ar-h);
+  width: min(100vw, calc(100vh * var(--ar-w) / var(--ar-h)));
   font-family: 'Pretendard', sans-serif;
   color: var(--text);
 }
+
+.board[data-device='tablet-land'] { --ar-w: 1920; --ar-h: 1440; }
+.board[data-device='tablet-port'] { --ar-w: 1440; --ar-h: 1920; }
+.board[data-device='mobile']      { --ar-w: 1080; --ar-h: 2160; }
 
 .board__bg {
   position: absolute;
@@ -36,14 +50,14 @@ body {
 .board__content {
   position: absolute;
   inset: 0;
-  padding: 8.5vmin;
+  padding: 8.5cqmin;
   display: flex;
   flex-direction: column;
 }
 
 .board__eyebrow {
-  font-size: 1.75vmin;
-  letter-spacing: 0.7vmin;
+  font-size: 1.75cqmin;
+  letter-spacing: 0.7cqmin;
   color: var(--accent);
   font-weight: 700;
   text-transform: uppercase;
@@ -51,42 +65,42 @@ body {
 
 .board__store {
   font-family: 'Nanum Myeongjo', serif;
-  font-size: 5.8vmin;
+  font-size: 5.8cqmin;
   font-weight: 800;
   color: var(--text);
   line-height: 1;
-  margin-top: 1.4vmin;
+  margin-top: 1.4cqmin;
 }
 
 .board__rule {
   height: 2px;
-  width: 11vmin;
+  width: 11cqmin;
   background: var(--accent);
   opacity: 0.85;
-  margin: 3vmin 0 2.2vmin;
+  margin: 3cqmin 0 2.2cqmin;
 }
 
 .board__sheet-row {
   display: flex;
   align-items: baseline;
-  gap: 2vmin;
+  gap: 2cqmin;
 }
 
 .board__tabs {
   display: flex;
   align-items: baseline;
-  gap: 2.2vmin;
+  gap: 2.2cqmin;
 }
 
 .board__tab {
   font-family: 'Nanum Myeongjo', serif;
-  font-size: 3vmin;
+  font-size: 3cqmin;
   font-weight: 700;
   color: var(--sub);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  padding: 0 0 0.4vmin;
+  padding: 0 0 0.4cqmin;
   cursor: pointer;
 }
 
@@ -96,8 +110,8 @@ body {
 }
 
 .board__sheet-meta {
-  font-size: 1.5vmin;
-  letter-spacing: 0.5vmin;
+  font-size: 1.5cqmin;
+  letter-spacing: 0.5cqmin;
   color: var(--sub);
   font-weight: 600;
   text-transform: uppercase;
@@ -106,9 +120,9 @@ body {
 .board__list {
   display: grid;
   grid-template-columns: 1fr;
-  column-gap: 7.5vmin;
-  row-gap: 3.2vmin;
-  margin-top: 5vmin;
+  column-gap: 7.5cqmin;
+  row-gap: 3.2cqmin;
+  margin-top: 5cqmin;
   overflow-y: auto;
 }
 
@@ -128,11 +142,11 @@ body {
 .board__item-row {
   display: flex;
   align-items: baseline;
-  gap: 1.2vmin;
+  gap: 1.2cqmin;
 }
 
 .board__item-name {
-  font-size: 3vmin;
+  font-size: 3cqmin;
   font-weight: 600;
   color: var(--text);
   white-space: nowrap;
@@ -144,12 +158,12 @@ body {
 }
 
 .board__item-badge {
-  font-size: 1.5vmin;
+  font-size: 1.5cqmin;
   font-weight: 700;
   color: #fff;
   background: var(--accent);
   border-radius: 999px;
-  padding: 0.3vmin 1.2vmin;
+  padding: 0.3cqmin 1.2cqmin;
   white-space: nowrap;
 }
 
@@ -157,11 +171,11 @@ body {
   flex: 1;
   align-self: center;
   border-bottom: 1px dotted var(--sub);
-  margin: 0 0.6vmin;
+  margin: 0 0.6cqmin;
 }
 
 .board__item-price {
-  font-size: 3vmin;
+  font-size: 3cqmin;
   font-weight: 700;
   color: var(--accent);
   white-space: nowrap;
@@ -172,8 +186,8 @@ body {
 }
 
 .board__item-desc {
-  font-size: 1.85vmin;
+  font-size: 1.85cqmin;
   color: var(--sub);
-  margin-top: 0.7vmin;
+  margin-top: 0.7cqmin;
   line-height: 1.3;
 }
